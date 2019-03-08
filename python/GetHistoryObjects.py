@@ -1,23 +1,21 @@
 #
 # Fetch objects from 46elks API with optional filters
-# 
+#
 # Works with: sms, calls, mms, numbers, recordings, images and conversations
 #
 # Example:
 #
-# username = u********************************* 
+# username = **********************************
 # password = **********************************
-# e = {'direction': 'outgoing'}
-# for sms in APIObjectGen('sms', username, password, e):
+# ensure = {'direction': 'outgoing'}
+# for sms in GetHistoryObjects('sms', username, password, e):
 #     print(sms)
 #
-
-
 import requests
 import json
 import datetime
 
-class APIObjectGen:
+class GetHistoryObjects:
     def __init__(self, endpoint, username, secret, ensure={}, start=datetime.datetime(year=3000, month=1, day=1), end=datetime.datetime(year=1970, month=1, day=1)):
         self.auth = (username, secret)
         self.objects = []
@@ -28,20 +26,23 @@ class APIObjectGen:
         self.endpoint = endpoint
 
     def get_objects(self, batchsize=100):
-        p = {'limit':batchsize, 'start':self.start.strftime("%Y-%m-%dT%H:%M:%S.%f"), 'end':self.end.strftime("%Y-%m-%dT%H:%M:%S.%f")}
-        
-        result = requests.get("https://api.46elks.com/a1/{}".format(self.endpoint), params=p, auth=self.auth)
+        p = {'limit': batchsize, 'start': self.start.strftime(
+            "%Y-%m-%dT%H:%M:%S.%f"), 'end': self.end.strftime("%Y-%m-%dT%H:%M:%S.%f")}
+        result = requests.get(
+            "https://api.46elks.com/a1/{}".format(self.endpoint), params=p, auth=self.auth)
         if result.status_code != 200:
-            raise Exception("API request failed with status {} and message: {}".format(result.status_code, result.text))
-        
+            raise Exception("API request failed with status {} and message: {}".format(
+                result.status_code, result.text))
+
         data = json.loads(result.text)
-        
+
         if 'next' in data:
-            self.start = datetime.datetime.strptime(data['next'], '%Y-%m-%dT%H:%M:%S.%f')
+            self.start = datetime.datetime.strptime(
+                data['next'], '%Y-%m-%dT%H:%M:%S.%f')
         else:
             self.has_more = False
         self.objects = data['data']
-            
+
     def __iter__(self):
         while True:
             if len(self.objects) == 0:
@@ -50,17 +51,15 @@ class APIObjectGen:
                 else:
                     return
             o = self.objects.pop()
-            matches = True 
+            matches = True
             for key in self.ensure.keys():
                 if key in o.keys():
                     if o[key] != self.ensure[key]:
                         matches = False
                         break
-                        
                 else:
                     matches = False
                     break
 
             if matches:
                 yield o
-    
