@@ -35,13 +35,16 @@ class GetHistoryObjects:
                 result.status_code, result.text))
 
         data = json.loads(result.text)
-
         if 'next' in data:
             self.start = datetime.datetime.strptime(
                 data['next'], '%Y-%m-%dT%H:%M:%S.%f')
         else:
             self.has_more = False
-        self.objects = data['data']
+
+        if self.endpoint.lower() in ['numbers']:
+            self.objects = sorted(data['data'], key=lambda k: k['allocated'])
+        else:
+            self.objects = sorted(data['data'], key=lambda k: k['created'])
 
     def __iter__(self):
         while True:
