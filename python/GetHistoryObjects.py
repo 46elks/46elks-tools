@@ -8,7 +8,7 @@
 # username = **********************************
 # password = **********************************
 # ensure = {'direction': 'outgoing'}
-# for sms in GetHistoryObjects('sms', username, password, e):
+# for sms in GetHistoryObjects('sms', username, password, ensure):
 #     print(sms)
 #
 import requests
